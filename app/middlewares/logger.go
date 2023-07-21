@@ -14,8 +14,10 @@ type PrependEncoder struct {
 	Pool buffer.Pool
 }
 
+var log = Log()
+
 func Log() *zap.Logger {
-	production := true
+	production := false
 	cfg := ZapGetConfig(production)
 
 	encoder := &PrependEncoder{
