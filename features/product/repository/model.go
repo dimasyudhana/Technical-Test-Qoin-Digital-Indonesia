@@ -3,8 +3,8 @@ package repository
 import (
 	"time"
 
+	"github.com/dimasyudhana/Qoin-Digital-Indonesia/features/product"
 	transaction "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/transaction/repository"
-	user "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/user/repository"
 )
 
 type Product struct {
@@ -32,7 +32,58 @@ type Restaurant struct {
 	CreatedAt         time.Time                 `gorm:"type:datetime"`
 	UpdatedAt         time.Time                 `gorm:"type:datetime"`
 	IsDeleted         bool                      `gorm:"type:boolean"`
-	User              user.User                 `gorm:"references:UserID"`
+	User              User                      `gorm:"foreignKey:UserID;references:UserID"`
 	Products          []Product                 `gorm:"foreignKey:RestaurantID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 	Transactions      []transaction.Transaction `gorm:"foreignKey:RestaurantID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+}
+
+type User struct {
+	UserID         string       `gorm:"primaryKey;type:varchar(45)"`
+	Username       string       `gorm:"type:varchar(225);not null"`
+	Email          string       `gorm:"type:varchar(225);not null;unique"`
+	Password       string       `gorm:"type:text;not null"`
+	Role           string       `gorm:"type:enum('user', 'owner');default:'user'"`
+	Status         string       `gorm:"type:enum('verified', 'unverified');default:'unverified'"`
+	ProfilePicture string       `gorm:"type:text"`
+	CreatedAt      time.Time    `gorm:"type:datetime"`
+	UpdatedAt      time.Time    `gorm:"type:datetime"`
+	IsDeleted      bool         `gorm:"type:boolean"`
+	Restaurant     []Restaurant `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+}
+
+func productModels(model Product) product.ProductCore {
+	return product.ProductCore{
+		ProductID:       model.ProductID,
+		RestaurantID:    model.RestaurantID,
+		ProductName:     model.ProductName,
+		Description:     model.Description,
+		ProductImage:    model.ProductImage,
+		ProductCategory: model.ProductCategory,
+		ProductPrice:    model.ProductPrice,
+		ProductQuantity: model.ProductQuantity,
+		CreatedAt:       model.CreatedAt,
+		UpdatedAt:       model.UpdatedAt,
+		IsDeleted:       model.IsDeleted,
+	}
+}
+
+func restaurantModels(model Restaurant) product.RestaurantCore {
+	products := make([]product.ProductCore, len(model.Products))
+
+	for i, p := range model.Products {
+		products[i] = productModels(p)
+	}
+
+	return product.RestaurantCore{
+		RestaurantID:      model.RestaurantID,
+		UserID:            model.UserID,
+		RestaurantName:    model.RestaurantName,
+		Description:       model.Description,
+		Status:            model.Status,
+		RestaurantProfile: model.RestaurantProfile,
+		CreatedAt:         model.CreatedAt,
+		UpdatedAt:         model.UpdatedAt,
+		IsDeleted:         model.IsDeleted,
+		Products:          products,
+	}
 }
