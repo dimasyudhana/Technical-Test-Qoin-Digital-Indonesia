@@ -2,6 +2,9 @@ package router
 
 import (
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/app/middlewares"
+	pc "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/product/controller"
+	pr "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/product/repository"
+	pu "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/product/usecase"
 	uc "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/user/controller"
 	ur "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/user/repository"
 	uu "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/user/usecase"
@@ -18,6 +21,7 @@ func InitRouter(db *gorm.DB, e *echo.Echo) {
 	}))
 
 	initUserRouter(db, e)
+	initProductRouter(db, e)
 }
 
 func initUserRouter(db *gorm.DB, e *echo.Echo) {
@@ -28,4 +32,12 @@ func initUserRouter(db *gorm.DB, e *echo.Echo) {
 	e.POST("/register", userHandler.Register())
 	e.POST("/login", userHandler.Login())
 	e.GET("/users", userHandler.Profile(), middlewares.JWTMiddleware())
+}
+
+func initProductRouter(db *gorm.DB, e *echo.Echo) {
+	productData := pr.New(db)
+	productService := pu.New(productData)
+	productHandler := pc.New(productService)
+
+	e.POST("/products", productHandler.RegisterRestaurantAndProducts(), middlewares.JWTMiddleware())
 }

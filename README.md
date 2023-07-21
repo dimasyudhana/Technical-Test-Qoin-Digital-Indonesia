@@ -1,7 +1,6 @@
 # Technical-Test-Qoin-Digital-Indonesia
 
 ### Entity Relational Diagram
-Users and rooms is many to many relationship so that it would give us conjunction table : messages and members.
 ![simple-chat](./docs/ERD-SQL.png)
 
 ### How To Run
@@ -12,7 +11,7 @@ You can setup MySQL by this way:
 docker run --name master -p 3306:3306 -e MYSQL_ROOT_PASSWORD=@Secret123 -d mysql:latest
 ```
 
-- To Access postgres you can run
+- To Access MySQL you can run
 ```
 docker exec -it master /bin/bash
 ```

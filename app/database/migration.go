@@ -2,7 +2,6 @@ package database
 
 import (
 	product "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/product/repository"
-	restaurant "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/restaurant/repository"
 	transaction "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/transaction/repository"
 	user "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/user/repository"
 	"gorm.io/gorm"
@@ -17,7 +16,7 @@ func InitMigration(db *gorm.DB) error {
 
 	err = db.AutoMigrate(
 		&user.User{},
-		&restaurant.Restaurant{},
+		&product.Restaurant{},
 		&product.Product{},
 		&transaction.Transaction{},
 	)
