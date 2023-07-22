@@ -13,5 +13,5 @@ func main() {
 	db := database.InitDatabase(cfg)
 	database.InitMigration(db)
 	router.InitRouter(db, e)
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Logger.Fatal(e.Start(":8181"))
 }

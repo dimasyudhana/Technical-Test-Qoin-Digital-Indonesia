@@ -43,3 +43,18 @@ func (ps *Service) RegisterRestaurantAndProducts(userId string, request product.
 
 	return result, err
 }
+
+// Stocks implements product.UseCase.
+func (ps *Service) Stocks(userId string, productId string) (product.StockCore, error) {
+	result, err := ps.query.Stocks(userId, productId)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			log.Error("not found, error while retrieving product")
+			return product.StockCore{}, errors.New("not found, error while retrieving product")
+		} else {
+			log.Error("internal server error")
+			return product.StockCore{}, errors.New("internal server error")
+		}
+	}
+	return result, nil
+}

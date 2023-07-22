@@ -65,7 +65,6 @@ type Product_TransactionsCore struct {
 	TransactionID        string
 	Subtotal             float64
 	Quantity             float64
-	Stock                float64
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
 	DeletedAt            gorm.DeletedAt

@@ -65,3 +65,27 @@ func (rh *Controller) RegisterRestaurantAndProducts() echo.HandlerFunc {
 		return c.JSON(http.StatusCreated, response.ResponseFormat(http.StatusCreated, "Successfully operation", nil, nil))
 	}
 }
+
+// Stocks implements product.Controller.
+func (pc *Controller) Stocks() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userId, err := middlewares.ExtractToken(c)
+		if err != nil {
+			log.Error("missing or malformed JWT")
+			return response.UnauthorizedError(c, "Missing or malformed JWT")
+		}
+
+		productId := c.Param("product_id")
+		result, err := pc.service.Stocks(userId, productId)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				log.Error("product not found")
+				return response.NotFoundError(c, "The requested resource was not found")
+			}
+			log.Error("internal server error")
+			return response.InternalServerError(c, "Internal server error")
+		}
+
+		return c.JSON(http.StatusOK, response.ResponseFormat(http.StatusOK, "Successfully operation.", stock(result), nil))
+	}
+}

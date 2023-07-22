@@ -51,6 +51,12 @@ type User struct {
 	Restaurant     []Restaurant `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 }
 
+type Stock struct {
+	RestaurantName  string
+	ProductName     string
+	ProductQuantity float64
+}
+
 func productEntities(core product.ProductCore) Product {
 	return Product{
 		ProductID:       core.ProductID,

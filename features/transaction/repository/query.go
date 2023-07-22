@@ -6,6 +6,7 @@ import (
 
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/app/middlewares"
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/features/transaction"
+	"github.com/dimasyudhana/Qoin-Digital-Indonesia/utils/identity"
 	"gorm.io/gorm"
 )
 
@@ -37,7 +38,42 @@ func (tq *Query) Carts(userId string, tr transaction.TransactionCore, ptr ...tra
 		return transaction.TransactionCore{}, err
 	}
 
-	if err := tx.Create(&transactionModel).Error; err != nil {
+	if transactionModel.PaymentStatus == "" {
+		transactionModel.PaymentStatus = "pending"
+	}
+
+	// Use raw SQL for inserting the data
+	err = tx.Exec(`
+		INSERT INTO transactions (
+			transaction_id, 
+			restaurant_id, 
+			user_id, 
+			invoice, 
+			grandtotal, 
+			payment_status, 
+			payment_method, 
+			payment_type, 
+			payment_code, 
+			purchase_start_date, 
+			purchase_end_date,
+			created_at,
+			updated_at
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, transactionModel.TransactionID,
+		transactionModel.RestaurantID,
+		transactionModel.UserID,
+		transactionModel.Invoice,
+		transactionModel.Grandtotal,
+		transactionModel.PaymentStatus,
+		transactionModel.PaymentMethod,
+		transactionModel.PaymentType,
+		transactionModel.PaymentCode,
+		time.Now(),
+		time.Now().Add(24*time.Hour),
+		time.Now(),
+		time.Now()).Error
+	if err != nil {
 		tx.Rollback()
 		log.Error("failed to create transaction")
 		return transaction.TransactionCore{}, err
@@ -58,21 +94,96 @@ func (tq *Query) Carts(userId string, tr transaction.TransactionCore, ptr ...tra
 	}
 
 	transactionModel.Grandtotal = grandtotal
-	if err := tx.Save(&transactionModel).Error; err != nil {
+	err = tx.Exec(`
+		UPDATE transactions
+		SET
+			restaurant_id = ?,
+			user_id = ?,
+			invoice = ?,
+			grandtotal = ?,
+			payment_status = ?,
+			payment_method = ?,
+			payment_type = ?,
+			payment_code = ?,
+			purchase_start_date = ?,
+			purchase_end_date = ?,
+			updated_at = ?
+		WHERE
+			transactions.deleted_at IS NULL AND transaction_id = ?
+		`,
+		transactionModel.RestaurantID,
+		transactionModel.UserID,
+		transactionModel.Invoice,
+		transactionModel.Grandtotal,
+		transactionModel.PaymentStatus,
+		transactionModel.PaymentMethod,
+		transactionModel.PaymentType,
+		transactionModel.PaymentCode,
+		transactionModel.PurchaseStartDate,
+		transactionModel.PurchaseEndDate,
+		time.Now(), // Set updated_at to the current time
+		transactionModel.TransactionID).Error
+	if err != nil {
 		tx.Rollback()
 		log.Error("failed to update grandtotal")
 		return transaction.TransactionCore{}, err
 	}
 
 	for i := range productTransactionsModel {
-		if err := tx.Create(&productTransactionsModel[i]).Error; err != nil {
+		productTransactionID, err := identity.GenerateID()
+		if err != nil {
+			tx.Rollback()
+			log.Error("failed to generate product transaction ID")
+			return transaction.TransactionCore{}, err
+		}
+
+		err = tx.Exec(`INSERT INTO product_transactions (
+			product_transaction_id,
+			transaction_id,
+			product_product_id,
+			quantity,
+			subtotal
+			) 
+			VALUES (?, ?, ?, ?, ?)
+			`, productTransactionID,
+			productTransactionsModel[i].TransactionID,
+			productTransactionsModel[i].ProductProductID,
+			productTransactionsModel[i].Quantity,
+			productTransactionsModel[i].Subtotal).Error
+		if err != nil {
 			tx.Rollback()
 			log.Error("failed to create product transaction")
 			return transaction.TransactionCore{}, err
 		}
+
+		productID := productTransactionsModel[i].ProductProductID
+		quantity := productTransactionsModel[i].Quantity
+
+		var product Product
+		err = tx.Raw("SELECT * FROM products WHERE product_id = ?", productID).Scan(&product).Error
+		if err != nil {
+			tx.Rollback()
+			log.Error("failed to get product from database")
+			return transaction.TransactionCore{}, err
+		}
+
+		product.ProductQuantity -= quantity
+		if product.ProductQuantity == 0.0 {
+			tx.Rollback()
+			log.Error("unavailable product stock")
+			return transaction.TransactionCore{}, err
+		}
+
+		err = tx.Exec("UPDATE products SET product_quantity = ? WHERE product_id = ?", product.ProductQuantity, productID).Error
+		if err != nil {
+			tx.Rollback()
+			log.Error("failed to update product stock")
+			return transaction.TransactionCore{}, err
+		}
 	}
 
-	if err := tx.Commit().Error; err != nil {
+	err = tx.Commit().Error
+	if err != nil {
 		log.Error("failed to commit database transaction")
 		return transaction.TransactionCore{}, err
 	}

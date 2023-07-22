@@ -1,6 +1,10 @@
 package controller
 
-import "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/product"
+import (
+	"fmt"
+
+	"github.com/dimasyudhana/Qoin-Digital-Indonesia/features/product"
+)
 
 type RegisterRestaurantAndProductsResponse struct {
 	Restaurant RegisteredRestaurant `json:"restaurant"`
@@ -27,6 +31,22 @@ func register(result product.RestaurantCore) RegisterRestaurantAndProductsRespon
 		response.Products[i] = RegisteredProduct{
 			ProductID: p.ProductID,
 		}
+	}
+
+	return response
+}
+
+type StockResponse struct {
+	RestaurantName  string `json:"restaurant_name"`
+	ProductName     string `json:"product_name"`
+	ProductQuantity string `json:"stock"`
+}
+
+func stock(r product.StockCore) StockResponse {
+	response := StockResponse{
+		RestaurantName:  r.RestaurantName,
+		ProductName:     r.ProductName,
+		ProductQuantity: fmt.Sprintf("%.2f", r.ProductQuantity),
 	}
 
 	return response

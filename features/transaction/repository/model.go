@@ -64,7 +64,6 @@ type Product_Transactions struct {
 	TransactionID        string         `gorm:"foreignKey:TransactionID;type:varchar(45)"`
 	Subtotal             float64        `gorm:"type:decimal(10,2);"`
 	Quantity             float64        `gorm:"type:decimal(10,2);"`
-	Stock                float64        `gorm:"type:decimal(10,2);"`
 	CreatedAt            time.Time      `gorm:"type:datetime"`
 	UpdatedAt            time.Time      `gorm:"type:datetime"`
 	DeletedAt            gorm.DeletedAt `gorm:"index"`
@@ -205,7 +204,6 @@ func productTransactionsModels(transactionID string, cores ...transaction.Produc
 			TransactionID:        transactionID,
 			Subtotal:             c.Subtotal,
 			Quantity:             c.Quantity,
-			Stock:                c.Stock,
 			CreatedAt:            c.CreatedAt,
 			UpdatedAt:            c.UpdatedAt,
 			DeletedAt:            c.DeletedAt,
@@ -231,7 +229,6 @@ func transactionEntities(m Transaction) transaction.TransactionCore {
 		CreatedAt:         m.CreatedAt,
 		UpdatedAt:         m.UpdatedAt,
 		DeletedAt:         m.DeletedAt,
-		// Product_Transactions: productTransactionsEntities(Product_TransactionsCore),
 	}
 }
 
@@ -245,7 +242,6 @@ func productTransactionsEntities(models []Product_Transactions) []transaction.Pr
 			TransactionID:        m.TransactionID,
 			Subtotal:             m.Subtotal,
 			Quantity:             m.Quantity,
-			Stock:                m.Stock,
 			CreatedAt:            m.CreatedAt,
 			UpdatedAt:            m.UpdatedAt,
 			DeletedAt:            m.DeletedAt,
