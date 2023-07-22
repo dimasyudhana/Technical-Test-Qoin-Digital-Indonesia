@@ -43,10 +43,10 @@ func (tc *Controller) Carts() echo.HandlerFunc {
 			return response.BadRequestError(c, "Bad request")
 		}
 
-		transactionCore := req.Transaction.ToCore()
+		transactionCore := req.Transaction.Carts()
 		productTransactionsCore := make([]transaction.Product_TransactionsCore, len(req.Product_Transactions))
 		for i, ptr := range req.Product_Transactions {
-			productTransactionsCore[i] = ptr.ToCore()
+			productTransactionsCore[i] = ptr.Carts()
 		}
 
 		_, err := tc.service.Carts(userId, transactionCore, productTransactionsCore...)
@@ -121,8 +121,8 @@ func (tc *Controller) Earnings() echo.HandlerFunc {
 
 		result, err := tc.service.Earnings(userId, PurchaseStartDate, PurchaseEndDate)
 		if err != nil {
-			if strings.Contains(err.Error(), "list reservations record not found") {
-				log.Error("list reservations record not found")
+			if strings.Contains(err.Error(), "record not found") {
+				log.Error("record not found")
 				return response.NotFoundError(c, "The requested resource was not found")
 			} else {
 				log.Error("internal server error")

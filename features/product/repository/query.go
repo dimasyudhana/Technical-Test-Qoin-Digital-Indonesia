@@ -21,7 +21,6 @@ func New(db *gorm.DB) product.Repository {
 
 // RegisterRestaurantAndProducts implements product.Repository.
 func (pq *Query) RegisterRestaurantAndProducts(userId string, request product.RestaurantCore) (restaurant product.RestaurantCore, err error) {
-	// Start a transaction
 	tx := pq.db.Begin()
 	if tx.Error != nil {
 		log.Error("failed to start database transaction")
@@ -37,7 +36,6 @@ func (pq *Query) RegisterRestaurantAndProducts(userId string, request product.Re
 		return restaurant, err
 	}
 
-	// Create the products associated with the restaurant
 	for i := range request.Products {
 		request.Products[i].RestaurantID = restaurantModel.RestaurantID
 		request.Products[i].ProductID, _ = identity.GenerateID()
@@ -49,7 +47,6 @@ func (pq *Query) RegisterRestaurantAndProducts(userId string, request product.Re
 		}
 	}
 
-	// Commit the transaction
 	err = tx.Commit().Error
 	if err != nil {
 		log.Error("failed to commit database transaction")
@@ -57,4 +54,33 @@ func (pq *Query) RegisterRestaurantAndProducts(userId string, request product.Re
 	}
 
 	return restaurant, nil
+}
+
+// Stocks implements product.Repository.
+func (pq *Query) Stocks(userId string, productId string) (product.StockCore, error) {
+	stockCore := Stock{}
+
+	// Use raw SQL to fetch the data
+	err := pq.db.Raw(`
+		SELECT restaurants.restaurant_name, products.product_name, products.product_quantity
+		FROM products
+		JOIN restaurants ON products.restaurant_id = restaurants.restaurant_id
+		WHERE restaurants.user_id = ? AND products.product_id = ?
+	`, userId, productId).Scan(&stockCore).Error
+	if err != nil {
+		log.Error("failed to get stock data")
+		return product.StockCore{}, err
+	}
+
+	log.Sugar().Infof("%+v", stockCore)
+
+	return StockModels(stockCore), nil
+}
+
+func StockModels(s Stock) product.StockCore {
+	return product.StockCore{
+		RestaurantName:  s.RestaurantName,
+		ProductName:     s.ProductName,
+		ProductQuantity: s.ProductQuantity,
+	}
 }

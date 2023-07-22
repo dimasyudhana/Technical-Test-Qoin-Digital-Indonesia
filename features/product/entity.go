@@ -83,20 +83,23 @@ type Product_TransactionCore struct {
 	DeletedAt            time.Time
 }
 
+type StockCore struct {
+	RestaurantName  string
+	ProductName     string
+	ProductQuantity float64
+}
+
 type Controller interface {
 	RegisterRestaurantAndProducts() echo.HandlerFunc
-	// SearchProduct() echo.HandlerFunc
-	// SelectProduct() echo.HandlerFunc
+	Stocks() echo.HandlerFunc
 }
 
 type UseCase interface {
 	RegisterRestaurantAndProducts(userId string, request RestaurantCore) (RestaurantCore, error)
-	// SearchProduct(keyword string, page pagination.Pagination) ([]ProductCore, int64, int, error)
-	// SelectProduct(productId string) (ProductCore, error)
+	Stocks(userId string, productId string) (StockCore, error)
 }
 
 type Repository interface {
 	RegisterRestaurantAndProducts(userId string, request RestaurantCore) (RestaurantCore, error)
-	// SearchProduct(keyword string, page pagination.Pagination) ([]ProductCore, int64, int, error)
-	// SelectProduct(productId string) (ProductCore, error)
+	Stocks(userId string, productId string) (StockCore, error)
 }

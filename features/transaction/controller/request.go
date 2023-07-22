@@ -13,17 +13,13 @@ type TransactionRequest struct {
 }
 
 type ProductTransactionRequest struct {
-	ProductProductID string `json:"product_product_id"`
+	ProductProductID string `json:"product_id"`
 	TransactionID    string `json:"transaction_id"`
 	Subtotal         string `json:"subtotal"`
 	Quantity         string `json:"quantity"`
 }
 
-func parseFloat64(str string) (float64, error) {
-	return strconv.ParseFloat(str, 64)
-}
-
-func (tr *TransactionRequest) ToCore() transaction.TransactionCore {
+func (tr *TransactionRequest) Carts() transaction.TransactionCore {
 	return transaction.TransactionCore{
 		RestaurantID:  tr.RestaurantID,
 		PaymentMethod: tr.PaymentMethod,
@@ -31,16 +27,16 @@ func (tr *TransactionRequest) ToCore() transaction.TransactionCore {
 	}
 }
 
-func (ptr *ProductTransactionRequest) ToCore() transaction.Product_TransactionsCore {
-	subtotal, err := parseFloat64(ptr.Subtotal)
+func (ptr *ProductTransactionRequest) Carts() transaction.Product_TransactionsCore {
+	subtotal, err := strconv.ParseFloat(ptr.Subtotal, 64)
 	if err != nil {
 		log.Error("error while parsing grandtotal to float64")
 		return transaction.Product_TransactionsCore{}
 	}
 
-	quantity, err := parseFloat64(ptr.Quantity)
+	quantity, err := strconv.ParseFloat(ptr.Quantity, 64)
 	if err != nil {
-		log.Error("error while parsing grandtotal to float64")
+		log.Error("error while parsing quantity to float64")
 		return transaction.Product_TransactionsCore{}
 	}
 
