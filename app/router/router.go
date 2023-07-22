@@ -52,4 +52,5 @@ func initTransactionRouter(db *gorm.DB, e *echo.Echo) {
 	transactionHandler := tc.New(transactionService)
 
 	e.POST("/transactions", transactionHandler.Carts(), middlewares.JWTMiddleware())
+	e.GET("/transactions/:transaction_id", transactionHandler.Invoice(), middlewares.JWTMiddleware())
 }

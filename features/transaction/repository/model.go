@@ -9,23 +9,23 @@ import (
 )
 
 type Transaction struct {
-	TransactionID        string         `gorm:"primaryKey;type:varchar(45)"`
-	RestaurantID         string         `gorm:"foreignKey:RestaurantID;type:varchar(45)"`
-	UserID               string         `gorm:"foreignKey:UserID;type:varchar(45)"`
-	Invoice              string         `gorm:"type:varchar(45);not null"`
-	Grandtotal           float64        `gorm:"type:decimal(10,2);"`
-	PaymentStatus        string         `gorm:"type:enum('pending','success','cancel','expire');default:'pending'"`
-	PaymentMethod        string         `gorm:"type:text;not null"`
-	PaymentType          string         `gorm:"type:text;not null"`
-	PaymentCode          string         `gorm:"type:text;not null"`
-	PurchaseStartDate    time.Time      `gorm:"type:datetime"`
-	PurchaseEndDate      time.Time      `gorm:"type:datetime"`
-	CreatedAt            time.Time      `gorm:"type:datetime"`
-	UpdatedAt            time.Time      `gorm:"type:datetime"`
-	DeletedAt            gorm.DeletedAt `gorm:"index"`
-	User                 User           `gorm:"references:UserID"`
-	Restaurant           Restaurant     `gorm:"references:RestaurantID"`
-	Product_Transactions []Product      `gorm:"many2many:product_transactions;foreignKey:TransactionID;joinForeignKey:TransactionID"`
+	TransactionID     string         `gorm:"primaryKey;type:varchar(45)"`
+	RestaurantID      string         `gorm:"foreignKey:RestaurantID;type:varchar(45)"`
+	UserID            string         `gorm:"foreignKey:UserID;type:varchar(45)"`
+	Invoice           string         `gorm:"type:varchar(45);not null"`
+	Grandtotal        float64        `gorm:"type:decimal(10,2);"`
+	PaymentStatus     string         `gorm:"type:enum('pending','success','cancel','expire');default:'pending'"`
+	PaymentMethod     string         `gorm:"type:text;not null"`
+	PaymentType       string         `gorm:"type:text;not null"`
+	PaymentCode       string         `gorm:"type:text;not null"`
+	PurchaseStartDate time.Time      `gorm:"type:datetime"`
+	PurchaseEndDate   time.Time      `gorm:"type:datetime"`
+	CreatedAt         time.Time      `gorm:"type:datetime"`
+	UpdatedAt         time.Time      `gorm:"type:datetime"`
+	DeletedAt         gorm.DeletedAt `gorm:"index"`
+	User              User           `gorm:"references:UserID"`
+	Restaurant        Restaurant     `gorm:"references:RestaurantID"`
+	Products          []Product      `gorm:"many2many:product_transactions;foreignKey:TransactionID;joinForeignKey:TransactionID"`
 }
 
 type Product struct {
@@ -60,7 +60,7 @@ type Restaurant struct {
 
 type Product_Transactions struct {
 	ProductTransactionID string         `gorm:"primaryKey;type:varchar(45)"`
-	ProductProductID     string         `gorm:"foreignKey:ProductProductID;type:varchar(45)"`
+	ProductProductID     string         `gorm:"foreignKey:ProductID;type:varchar(45)"`
 	TransactionID        string         `gorm:"foreignKey:TransactionID;type:varchar(45)"`
 	Subtotal             float64        `gorm:"type:decimal(10,2);"`
 	Quantity             float64        `gorm:"type:decimal(10,2);"`
@@ -68,6 +68,8 @@ type Product_Transactions struct {
 	CreatedAt            time.Time      `gorm:"type:datetime"`
 	UpdatedAt            time.Time      `gorm:"type:datetime"`
 	DeletedAt            gorm.DeletedAt `gorm:"index"`
+	Product              Product        `gorm:"foreignKey:ProductProductID"`
+	Transaction          Transaction    `gorm:"references:TransactionID"`
 }
 
 type User struct {
@@ -140,7 +142,7 @@ func productTransactionsModels(transactionID string, cores ...transaction.Produc
 		models[i] = Product_Transactions{
 			ProductTransactionID: productTransactionID,
 			ProductProductID:     c.ProductProductID,
-			TransactionID:        transactionID, // Use the provided transactionID here
+			TransactionID:        transactionID,
 			Subtotal:             c.Subtotal,
 			Quantity:             c.Quantity,
 			Stock:                c.Stock,
