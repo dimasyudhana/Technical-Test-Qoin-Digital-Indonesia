@@ -5,6 +5,9 @@ import (
 	pc "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/product/controller"
 	pr "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/product/repository"
 	pu "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/product/usecase"
+	tc "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/transaction/controller"
+	tr "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/transaction/repository"
+	tu "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/transaction/usecase"
 	uc "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/user/controller"
 	ur "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/user/repository"
 	uu "github.com/dimasyudhana/Qoin-Digital-Indonesia/features/user/usecase"
@@ -22,6 +25,7 @@ func InitRouter(db *gorm.DB, e *echo.Echo) {
 
 	initUserRouter(db, e)
 	initProductRouter(db, e)
+	initTransactionRouter(db, e)
 }
 
 func initUserRouter(db *gorm.DB, e *echo.Echo) {
@@ -40,4 +44,12 @@ func initProductRouter(db *gorm.DB, e *echo.Echo) {
 	productHandler := pc.New(productService)
 
 	e.POST("/products", productHandler.RegisterRestaurantAndProducts(), middlewares.JWTMiddleware())
+}
+
+func initTransactionRouter(db *gorm.DB, e *echo.Echo) {
+	transactionData := tr.New(db)
+	transactionService := tu.New(transactionData)
+	transactionHandler := tc.New(transactionService)
+
+	e.POST("/transactions", transactionHandler.Carts(), middlewares.JWTMiddleware())
 }

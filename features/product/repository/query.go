@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"errors"
-
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/app/middlewares"
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/features/product"
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/utils/identity"
@@ -30,21 +28,10 @@ func (pq *Query) RegisterRestaurantAndProducts(userId string, request product.Re
 		return restaurant, tx.Error
 	}
 
-	// Generate a new restaurant ID
-	restaurantId, err := identity.GenerateID()
-	if err != nil {
-		tx.Rollback()
-		log.Error("error while creating id for restaurant")
-		return restaurant, errors.New("error while creating id for restaurant")
-	}
-
-	// Create the restaurant record
-	restaurant = product.RestaurantCore{
-		RestaurantID:   restaurantId,
-		UserID:         userId,
-		RestaurantName: request.RestaurantName,
-	}
-	if err := tx.Create(&restaurant).Error; err != nil {
+	request.UserID = userId
+	restaurantModel := restaurantEntities(request)
+	restaurantModel.RestaurantID, _ = identity.GenerateID()
+	if err := tx.Create(&restaurantModel).Error; err != nil {
 		tx.Rollback()
 		log.Error("failed to create restaurant")
 		return restaurant, err
@@ -52,8 +39,10 @@ func (pq *Query) RegisterRestaurantAndProducts(userId string, request product.Re
 
 	// Create the products associated with the restaurant
 	for i := range request.Products {
-		request.Products[i].RestaurantID = restaurant.RestaurantID
-		if err := tx.Create(&request.Products[i]).Error; err != nil {
+		request.Products[i].RestaurantID = restaurantModel.RestaurantID
+		request.Products[i].ProductID, _ = identity.GenerateID()
+		productModel := productEntities(request.Products[i])
+		if err := tx.Create(&productModel).Error; err != nil {
 			tx.Rollback()
 			log.Error("failed to create product")
 			return restaurant, err

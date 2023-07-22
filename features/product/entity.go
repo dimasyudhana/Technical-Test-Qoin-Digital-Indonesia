@@ -1,7 +1,6 @@
 package product
 
 import (
-	"os/user"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -32,7 +31,7 @@ type RestaurantCore struct {
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 	IsDeleted         bool
-	User              user.User
+	User              UserCore
 	Products          []ProductCore
 	Transactions      []TransactionCore
 }

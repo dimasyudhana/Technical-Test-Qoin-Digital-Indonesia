@@ -32,7 +32,7 @@ type Restaurant struct {
 	CreatedAt         time.Time                 `gorm:"type:datetime"`
 	UpdatedAt         time.Time                 `gorm:"type:datetime"`
 	IsDeleted         bool                      `gorm:"type:boolean"`
-	User              User                      `gorm:"foreignKey:UserID;references:UserID"`
+	User              User                      `gorm:"foreignKey:UserID"`
 	Products          []Product                 `gorm:"foreignKey:RestaurantID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 	Transactions      []transaction.Transaction `gorm:"foreignKey:RestaurantID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 }
@@ -49,6 +49,43 @@ type User struct {
 	UpdatedAt      time.Time    `gorm:"type:datetime"`
 	IsDeleted      bool         `gorm:"type:boolean"`
 	Restaurant     []Restaurant `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+}
+
+func productEntities(core product.ProductCore) Product {
+	return Product{
+		ProductID:       core.ProductID,
+		RestaurantID:    core.RestaurantID,
+		ProductName:     core.ProductName,
+		Description:     core.Description,
+		ProductImage:    core.ProductImage,
+		ProductCategory: core.ProductCategory,
+		ProductPrice:    core.ProductPrice,
+		ProductQuantity: core.ProductQuantity,
+		CreatedAt:       core.CreatedAt,
+		UpdatedAt:       core.UpdatedAt,
+		IsDeleted:       core.IsDeleted,
+	}
+}
+
+func restaurantEntities(core product.RestaurantCore) Restaurant {
+	products := make([]Product, len(core.Products))
+
+	for i, p := range core.Products {
+		products[i] = productEntities(p)
+	}
+
+	return Restaurant{
+		RestaurantID:      core.RestaurantID,
+		UserID:            core.UserID,
+		RestaurantName:    core.RestaurantName,
+		Description:       core.Description,
+		Status:            core.Status,
+		RestaurantProfile: core.RestaurantProfile,
+		CreatedAt:         core.CreatedAt,
+		UpdatedAt:         core.UpdatedAt,
+		IsDeleted:         core.IsDeleted,
+		Products:          products,
+	}
 }
 
 func productModels(model Product) product.ProductCore {

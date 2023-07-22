@@ -8,7 +8,9 @@ import (
 )
 
 var (
-	JWT string
+	JWT                  string
+	MIDTRANS_SERVERKEY   string
+	MIDTRANS_MERCHANT_ID string
 )
 
 type AppConfig struct {
@@ -57,6 +59,16 @@ func readEnv() *AppConfig {
 		isRead = false
 	}
 
+	if val, found := os.LookupEnv("MIDTRANS_SERVERKEY"); found {
+		MIDTRANS_SERVERKEY = val
+		isRead = false
+	}
+
+	if val, found := os.LookupEnv("MIDTRANS_MERCHANT_ID"); found {
+		MIDTRANS_MERCHANT_ID = val
+		isRead = false
+	}
+
 	if isRead {
 		viper.AddConfigPath(".")
 		viper.SetConfigName("config")
@@ -74,6 +86,8 @@ func readEnv() *AppConfig {
 		app.DBPORT = viper.GetString("DBPORT")
 		app.DBNAME = viper.GetString("DBNAME")
 		JWT = viper.GetString("JWT")
+		MIDTRANS_SERVERKEY = viper.GetString("MIDTRANS_SERVERKEY")
+		MIDTRANS_MERCHANT_ID = viper.GetString("MIDTRANS_MERCHANT_ID")
 	}
 
 	return &app
