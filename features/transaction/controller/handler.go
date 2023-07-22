@@ -65,3 +65,28 @@ func (tc *Controller) Carts() echo.HandlerFunc {
 		return c.JSON(http.StatusCreated, response.ResponseFormat(http.StatusCreated, "Successfully operation", nil, nil))
 	}
 }
+
+// Invoice implements transaction.Controller.
+func (tc *Controller) Invoice() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userId, errToken := middlewares.ExtractToken(c)
+		if errToken != nil {
+			log.Error("missing or malformed JWT")
+			return response.UnauthorizedError(c, "Missing or malformed JWT")
+		}
+
+		transactionId := c.Param("transaction_id")
+		result, err := tc.service.Invoice(userId, transactionId)
+		if err != nil {
+			if strings.Contains(err.Error(), "list reservations record not found") {
+				log.Error("list reservations record not found")
+				return response.NotFoundError(c, "The requested resource was not found")
+			} else {
+				log.Error("internal server error")
+				return response.InternalServerError(c, "Internal server error")
+			}
+		}
+
+		return c.JSON(http.StatusOK, response.ResponseFormat(http.StatusOK, "Successful Operation", invoice(result), nil))
+	}
+}

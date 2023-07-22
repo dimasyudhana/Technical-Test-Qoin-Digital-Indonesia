@@ -8,7 +8,7 @@ import (
 )
 
 func InitMigration(db *gorm.DB) error {
-	err := db.SetupJoinTable(&transaction.Transaction{}, "Product_Transactions", &transaction.Product_Transactions{})
+	err := db.SetupJoinTable(&transaction.Transaction{}, "Products", &transaction.Product_Transactions{})
 	if err != nil {
 		log.Sugar().Error("setup err ", err)
 		panic(err.Error())

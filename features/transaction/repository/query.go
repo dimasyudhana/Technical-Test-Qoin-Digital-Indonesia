@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"errors"
+
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/app/middlewares"
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/features/transaction"
 	"gorm.io/gorm"
@@ -77,4 +79,45 @@ func (tq *Query) Carts(userId string, tr transaction.TransactionCore, ptr ...tra
 	// log.Sugar().Infof("Transaction: %+v", request)
 	// log.Sugar().Infof("Product_Transactions: %+v", request.Product_Transactions)
 	return request, nil
+}
+
+// Invoice implements transaction.Repository.
+func (tq *Query) Invoice(userId string, transactionId string) (transaction.Product_TransactionsCore, error) {
+	result := Product_Transactions{}
+	err := tq.db.Preload("Product").Preload("Transaction").First(&result, "transaction_id = ?", transactionId).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Error("invoice data not found")
+			return transaction.Product_TransactionsCore{}, errors.New("invoice data not found")
+		}
+		log.Sugar().Error("error executing invoice query:", err)
+		return transaction.Product_TransactionsCore{}, err
+	}
+
+	response, err := invoiceModels(result)
+	if err != nil {
+		return transaction.Product_TransactionsCore{}, err
+	}
+
+	// log.Sugar().Infof("%+v", result)
+	return response, nil
+}
+
+func invoiceModels(model Product_Transactions) (transaction.Product_TransactionsCore, error) {
+	return transaction.Product_TransactionsCore{
+		ProductTransactionID: model.ProductTransactionID,
+		ProductProductID:     model.ProductProductID,
+		TransactionID:        model.TransactionID,
+		Subtotal:             model.Subtotal,
+		Quantity:             model.Quantity,
+		Product: transaction.ProductCore{
+			ProductName: model.Product.ProductName,
+		},
+		Transaction: transaction.TransactionCore{
+			Invoice:           model.Transaction.Invoice,
+			Grandtotal:        model.Transaction.Grandtotal,
+			PurchaseStartDate: model.Transaction.PurchaseStartDate,
+			PurchaseEndDate:   model.Transaction.PurchaseEndDate,
+		},
+	}, nil
 }

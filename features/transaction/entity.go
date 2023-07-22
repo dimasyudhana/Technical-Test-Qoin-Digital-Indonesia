@@ -24,6 +24,7 @@ type TransactionCore struct {
 	DeletedAt            gorm.DeletedAt
 	User                 UserCore
 	Restaurant           RestaurantCore
+	Products             []ProductCore
 	Product_Transactions []Product_TransactionsCore
 }
 
@@ -67,6 +68,8 @@ type Product_TransactionsCore struct {
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
 	DeletedAt            gorm.DeletedAt
+	Product              ProductCore
+	Transaction          TransactionCore
 }
 
 type UserCore struct {
@@ -86,12 +89,15 @@ type UserCore struct {
 
 type Controller interface {
 	Carts() echo.HandlerFunc
+	Invoice() echo.HandlerFunc
 }
 
 type UseCase interface {
 	Carts(userId string, tr TransactionCore, ptr ...Product_TransactionsCore) (TransactionCore, error)
+	Invoice(userId string, transactionId string) (Product_TransactionsCore, error)
 }
 
 type Repository interface {
 	Carts(userId string, tr TransactionCore, ptr ...Product_TransactionsCore) (TransactionCore, error)
+	Invoice(userId string, transactionId string) (Product_TransactionsCore, error)
 }
