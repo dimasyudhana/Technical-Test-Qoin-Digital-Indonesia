@@ -38,15 +38,15 @@ func (ts *Service) Carts(userId string, tr transaction.TransactionCore, ptr ...t
 }
 
 // Invoice implements transaction.UseCase.
-func (ts *Service) Invoice(userId string, transactionId string) (transaction.Product_TransactionsCore, error) {
+func (ts *Service) Invoice(userId string, transactionId string) ([]transaction.InvoiceCore, error) {
 	result, err := ts.query.Invoice(userId, transactionId)
 	if err != nil {
 		if strings.Contains(err.Error(), "invoice record not found") {
 			log.Error("invoice record not found")
-			return transaction.Product_TransactionsCore{}, errors.New("invoice record not found")
+			return []transaction.InvoiceCore{}, errors.New("invoice record not found")
 		} else {
 			log.Error("internal server error")
-			return transaction.Product_TransactionsCore{}, errors.New("internal server error")
+			return []transaction.InvoiceCore{}, errors.New("internal server error")
 		}
 	}
 

@@ -88,6 +88,29 @@ type UserCore struct {
 	Transactions   []TransactionCore
 }
 
+type InvoiceCore struct {
+	ProductTransactionID string
+	ProductProductID     string
+	TransactionID        string
+	RestaurantID         string
+	RestaurantName       string
+	Owner                string
+	UserID               string
+	Buyer                string
+	ProductName          string
+	Subtotal             float64
+	Quantity             float64
+	Stock                float64
+	Invoice              string
+	Grandtotal           float64
+	PaymentStatus        string
+	PaymentMethod        string
+	PaymentType          string
+	PaymentCode          string
+	PurchaseStartDate    time.Time
+	PurchaseEndDate      time.Time
+}
+
 type EarningsCore struct {
 	Username string
 	Earnings float64
@@ -101,12 +124,12 @@ type Controller interface {
 
 type UseCase interface {
 	Carts(userId string, tr TransactionCore, ptr ...Product_TransactionsCore) (TransactionCore, error)
-	Invoice(userId string, transactionId string) (Product_TransactionsCore, error)
+	Invoice(userId string, transactionId string) ([]InvoiceCore, error)
 	Earnings(userId string, PurchaseStartDate time.Time, PurchaseEndDate time.Time) (EarningsCore, error)
 }
 
 type Repository interface {
 	Carts(userId string, tr TransactionCore, ptr ...Product_TransactionsCore) (TransactionCore, error)
-	Invoice(userId string, transactionId string) (Product_TransactionsCore, error)
+	Invoice(userId string, transactionId string) ([]InvoiceCore, error)
 	Earnings(userId string, PurchaseStartDate time.Time, PurchaseEndDate time.Time) (EarningsCore, error)
 }
