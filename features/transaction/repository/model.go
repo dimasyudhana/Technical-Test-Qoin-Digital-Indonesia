@@ -87,6 +87,18 @@ type User struct {
 	Transactions   []Transaction `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 }
 
+type Earnings struct {
+	Username string
+	Earnings float64
+}
+
+func earningsModels(earn Earnings) transaction.EarningsCore {
+	return transaction.EarningsCore{
+		Username: earn.Username,
+		Earnings: earn.Earnings,
+	}
+}
+
 // Map TransactionCore to Transaction model
 func transactionModels(core transaction.TransactionCore) (Transaction, error) {
 	transactionID, err := identity.GenerateID()

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"time"
 
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/app/middlewares"
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/features/transaction"
@@ -120,4 +121,28 @@ func invoiceModels(model Product_Transactions) (transaction.Product_Transactions
 			PurchaseEndDate:   model.Transaction.PurchaseEndDate,
 		},
 	}, nil
+}
+
+// Earnings implements transaction.Repository.
+func (tq *Query) Earnings(userId string, PurchaseStartDate time.Time, PurchaseEndDate time.Time) (transaction.EarningsCore, error) {
+	result := Earnings{}
+	query := tq.db.Raw(`
+		SELECT transactions.user_id, SUM(transactions.grandtotal) AS earnings
+		FROM transactions 
+		WHERE transactions.user_id = ?
+		AND ((transactions.purchase_start_date BETWEEN ? AND ?) OR (transactions.purchase_end_date BETWEEN ? AND ?))
+		AND transactions.payment_status = "success"
+		GROUP BY transactions.user_id
+	`, userId, PurchaseStartDate, PurchaseEndDate, PurchaseStartDate, PurchaseEndDate).Scan(&result)
+	if errors.Is(query.Error, gorm.ErrRecordNotFound) {
+		log.Error("earnings record not found")
+		return transaction.EarningsCore{}, errors.New("earnings record not found")
+	} else if query.Error != nil {
+		log.Sugar().Error("error executing earnings query:", query.Error)
+		return transaction.EarningsCore{}, query.Error
+	} else {
+		log.Sugar().Info("earnings data found in the database")
+	}
+
+	return earningsModels(result), nil
 }

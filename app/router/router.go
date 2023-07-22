@@ -33,9 +33,14 @@ func initUserRouter(db *gorm.DB, e *echo.Echo) {
 	userService := uu.New(userData)
 	userHandler := uc.New(userService)
 
+	transactionData := tr.New(db)
+	transactionService := tu.New(transactionData)
+	transactionHandler := tc.New(transactionService)
+
 	e.POST("/register", userHandler.Register())
 	e.POST("/login", userHandler.Login())
 	e.GET("/users", userHandler.Profile(), middlewares.JWTMiddleware())
+	e.GET("/users/earnings", transactionHandler.Earnings(), middlewares.JWTMiddleware())
 }
 
 func initProductRouter(db *gorm.DB, e *echo.Echo) {

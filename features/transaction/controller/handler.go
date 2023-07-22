@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/app/middlewares"
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/features/transaction"
@@ -78,8 +79,8 @@ func (tc *Controller) Invoice() echo.HandlerFunc {
 		transactionId := c.Param("transaction_id")
 		result, err := tc.service.Invoice(userId, transactionId)
 		if err != nil {
-			if strings.Contains(err.Error(), "list reservations record not found") {
-				log.Error("list reservations record not found")
+			if strings.Contains(err.Error(), "invoice record not found") {
+				log.Error("invoice record not found")
 				return response.NotFoundError(c, "The requested resource was not found")
 			} else {
 				log.Error("internal server error")
@@ -88,5 +89,46 @@ func (tc *Controller) Invoice() echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, response.ResponseFormat(http.StatusOK, "Successful Operation", invoice(result), nil))
+	}
+}
+
+// Earnings implements transaction.Controller.
+func (tc *Controller) Earnings() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userId, errToken := middlewares.ExtractToken(c)
+		if errToken != nil {
+			log.Error("missing or malformed JWT")
+			return response.UnauthorizedError(c, "Missing or malformed JWT")
+		}
+
+		PurchaseStartDateStr := c.QueryParam("start_date")
+		PurchaseEndDateStr := c.QueryParam("end_date")
+		PurchaseStartDate, err := time.Parse("2006-01-02 15:04:05", PurchaseStartDateStr)
+		if err != nil {
+			log.Error("failed to parse start_date")
+			return response.BadRequestError(c, "Invalid value for start_date")
+		}
+
+		log.Sugar().Info(PurchaseStartDate)
+
+		PurchaseEndDate, err := time.Parse("2006-01-02 15:04:05", PurchaseEndDateStr)
+		if err != nil {
+			log.Error("failed to parse end_date")
+			return response.BadRequestError(c, "Invalid value for end_date")
+		}
+
+		log.Sugar().Info(PurchaseEndDate)
+
+		result, err := tc.service.Earnings(userId, PurchaseStartDate, PurchaseEndDate)
+		if err != nil {
+			if strings.Contains(err.Error(), "list reservations record not found") {
+				log.Error("list reservations record not found")
+				return response.NotFoundError(c, "The requested resource was not found")
+			} else {
+				log.Error("internal server error")
+				return response.InternalServerError(c, "Internal server error")
+			}
+		}
+		return c.JSON(http.StatusOK, response.ResponseFormat(http.StatusOK, "Successful Operation", earnings(result), nil))
 	}
 }

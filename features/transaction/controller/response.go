@@ -19,6 +19,11 @@ type Products struct {
 	ProductName string `json:"product_name,omitempty"`
 }
 
+type earningsResponse struct {
+	Username string `json:"username,omitempty"`
+	Earnings string `json:"earnings,omitempty"`
+}
+
 func invoice(r transaction.Product_TransactionsCore) invoiceResponse {
 	response := invoiceResponse{
 		TransactionID:     r.TransactionID,
@@ -31,6 +36,15 @@ func invoice(r transaction.Product_TransactionsCore) invoiceResponse {
 				ProductName: r.Product.ProductName,
 			},
 		},
+	}
+
+	return response
+}
+
+func earnings(r transaction.EarningsCore) earningsResponse {
+	response := earningsResponse{
+		Username: r.Username,
+		Earnings: fmt.Sprintf("%.2f", r.Earnings),
 	}
 
 	return response
