@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/app/middlewares"
 	"github.com/dimasyudhana/Qoin-Digital-Indonesia/features/transaction"
@@ -40,12 +41,28 @@ func (ts *Service) Carts(userId string, tr transaction.TransactionCore, ptr ...t
 func (ts *Service) Invoice(userId string, transactionId string) (transaction.Product_TransactionsCore, error) {
 	result, err := ts.query.Invoice(userId, transactionId)
 	if err != nil {
-		if strings.Contains(err.Error(), "transactions record not found") {
-			log.Error("transactions record not found")
-			return transaction.Product_TransactionsCore{}, errors.New("transactions record not found")
+		if strings.Contains(err.Error(), "invoice record not found") {
+			log.Error("invoice record not found")
+			return transaction.Product_TransactionsCore{}, errors.New("invoice record not found")
 		} else {
 			log.Error("internal server error")
 			return transaction.Product_TransactionsCore{}, errors.New("internal server error")
+		}
+	}
+
+	return result, err
+}
+
+// Earnings implements transaction.UseCase.
+func (ts *Service) Earnings(userId string, PurchaseStartDate time.Time, PurchaseEndDate time.Time) (transaction.EarningsCore, error) {
+	result, err := ts.query.Earnings(userId, PurchaseStartDate, PurchaseEndDate)
+	if err != nil {
+		if strings.Contains(err.Error(), "invoice record not found") {
+			log.Error("invoice record not found")
+			return transaction.EarningsCore{}, errors.New("invoice record not found")
+		} else {
+			log.Error("internal server error")
+			return transaction.EarningsCore{}, errors.New("internal server error")
 		}
 	}
 

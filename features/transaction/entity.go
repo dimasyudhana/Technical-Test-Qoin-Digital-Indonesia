@@ -26,6 +26,7 @@ type TransactionCore struct {
 	Restaurant           RestaurantCore
 	Products             []ProductCore
 	Product_Transactions []Product_TransactionsCore
+	Earnings             float64
 }
 
 type RestaurantCore struct {
@@ -87,17 +88,25 @@ type UserCore struct {
 	Transactions   []TransactionCore
 }
 
+type EarningsCore struct {
+	Username string
+	Earnings float64
+}
+
 type Controller interface {
 	Carts() echo.HandlerFunc
 	Invoice() echo.HandlerFunc
+	Earnings() echo.HandlerFunc
 }
 
 type UseCase interface {
 	Carts(userId string, tr TransactionCore, ptr ...Product_TransactionsCore) (TransactionCore, error)
 	Invoice(userId string, transactionId string) (Product_TransactionsCore, error)
+	Earnings(userId string, PurchaseStartDate time.Time, PurchaseEndDate time.Time) (EarningsCore, error)
 }
 
 type Repository interface {
 	Carts(userId string, tr TransactionCore, ptr ...Product_TransactionsCore) (TransactionCore, error)
 	Invoice(userId string, transactionId string) (Product_TransactionsCore, error)
+	Earnings(userId string, PurchaseStartDate time.Time, PurchaseEndDate time.Time) (EarningsCore, error)
 }
