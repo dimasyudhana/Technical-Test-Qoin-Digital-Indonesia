@@ -3,6 +3,8 @@ package repository
 import (
 	"time"
 
+	"github.com/dimasyudhana/Qoin-Digital-Indonesia/features/transaction"
+	"github.com/dimasyudhana/Qoin-Digital-Indonesia/utils/identity"
 	"gorm.io/gorm"
 )
 
@@ -58,7 +60,7 @@ type Restaurant struct {
 
 type Product_Transactions struct {
 	ProductTransactionID string         `gorm:"primaryKey;type:varchar(45)"`
-	ProductProductID     string         `gorm:"foreignKey:ProductID;type:varchar(45)"`
+	ProductProductID     string         `gorm:"foreignKey:ProductProductID;type:varchar(45)"`
 	TransactionID        string         `gorm:"foreignKey:TransactionID;type:varchar(45)"`
 	Subtotal             float64        `gorm:"type:decimal(10,2);"`
 	Quantity             float64        `gorm:"type:decimal(10,2);"`
@@ -81,4 +83,111 @@ type User struct {
 	IsDeleted      bool          `gorm:"type:boolean"`
 	Restaurant     []Restaurant  `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 	Transactions   []Transaction `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+}
+
+// Map TransactionCore to Transaction model
+func transactionModels(core transaction.TransactionCore) (Transaction, error) {
+	transactionID, err := identity.GenerateID()
+	if err != nil {
+		return Transaction{}, err
+	}
+
+	invoice, err := identity.GenerateID()
+	if err != nil {
+		return Transaction{}, err
+	}
+
+	grandtotal := 0.0
+	for _, pt := range core.Product_Transactions {
+		grandtotal += pt.Subtotal
+	}
+
+	payment_code, err := identity.GenerateID()
+	if err != nil {
+		return Transaction{}, err
+	}
+
+	purchaseStartDate := time.Now()
+	purchaseEndDate := purchaseStartDate.Add(24 * time.Hour)
+
+	return Transaction{
+		TransactionID:     transactionID,
+		RestaurantID:      core.RestaurantID,
+		UserID:            core.UserID,
+		Invoice:           invoice,
+		Grandtotal:        grandtotal,
+		PaymentStatus:     core.PaymentStatus,
+		PaymentMethod:     core.PaymentMethod,
+		PaymentType:       core.PaymentType,
+		PaymentCode:       payment_code,
+		PurchaseStartDate: purchaseStartDate,
+		PurchaseEndDate:   purchaseEndDate,
+		CreatedAt:         core.CreatedAt,
+		UpdatedAt:         core.UpdatedAt,
+		DeletedAt:         core.DeletedAt,
+	}, nil
+}
+
+// Map Product_TransactionCore slice to Product_Transactions model slice
+func productTransactionsModels(transactionID string, cores ...transaction.Product_TransactionsCore) ([]Product_Transactions, error) {
+	models := make([]Product_Transactions, len(cores))
+	for i, c := range cores {
+		productTransactionID, err := identity.GenerateID()
+		if err != nil {
+			return nil, err
+		}
+
+		models[i] = Product_Transactions{
+			ProductTransactionID: productTransactionID,
+			ProductProductID:     c.ProductProductID,
+			TransactionID:        transactionID, // Use the provided transactionID here
+			Subtotal:             c.Subtotal,
+			Quantity:             c.Quantity,
+			Stock:                c.Stock,
+			CreatedAt:            c.CreatedAt,
+			UpdatedAt:            c.UpdatedAt,
+			DeletedAt:            c.DeletedAt,
+		}
+	}
+	return models, nil
+}
+
+// Map Transaction model to TransactionCore
+func transactionEntities(model Transaction) transaction.TransactionCore {
+	return transaction.TransactionCore{
+		TransactionID:     model.TransactionID,
+		RestaurantID:      model.RestaurantID,
+		UserID:            model.UserID,
+		Invoice:           model.Invoice,
+		Grandtotal:        model.Grandtotal,
+		PaymentStatus:     model.PaymentStatus,
+		PaymentMethod:     model.PaymentMethod,
+		PaymentType:       model.PaymentType,
+		PaymentCode:       model.PaymentCode,
+		PurchaseStartDate: model.PurchaseStartDate,
+		PurchaseEndDate:   model.PurchaseEndDate,
+		CreatedAt:         model.CreatedAt,
+		UpdatedAt:         model.UpdatedAt,
+		DeletedAt:         model.DeletedAt,
+		// Product_Transactions: productTransactionsEntities(Product_TransactionsCore),
+	}
+}
+
+// Map Product_Transactions model slice to Product_TransactionCore slice
+func productTransactionsEntities(models []Product_Transactions) []transaction.Product_TransactionsCore {
+	cores := make([]transaction.Product_TransactionsCore, len(models))
+	for i, m := range models {
+		cores[i] = transaction.Product_TransactionsCore{
+			ProductTransactionID: m.ProductTransactionID,
+			ProductProductID:     m.ProductProductID,
+			TransactionID:        m.TransactionID,
+			Subtotal:             m.Subtotal,
+			Quantity:             m.Quantity,
+			Stock:                m.Stock,
+			CreatedAt:            m.CreatedAt,
+			UpdatedAt:            m.UpdatedAt,
+			DeletedAt:            m.DeletedAt,
+		}
+	}
+	return cores
 }

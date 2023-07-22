@@ -48,7 +48,7 @@ func (rh *Controller) RegisterRestaurantAndProducts() echo.HandlerFunc {
 			restaurantCore.Products = append(restaurantCore.Products, productCore)
 		}
 
-		result, err := rh.service.RegisterRestaurantAndProducts(userId, restaurantCore)
+		_, err := rh.service.RegisterRestaurantAndProducts(userId, restaurantCore)
 		if err != nil {
 			switch {
 			case strings.Contains(err.Error(), "empty"):
@@ -62,6 +62,6 @@ func (rh *Controller) RegisterRestaurantAndProducts() echo.HandlerFunc {
 				return response.InternalServerError(c, "Internal server error")
 			}
 		}
-		return c.JSON(http.StatusCreated, response.ResponseFormat(http.StatusCreated, "Successfully operation", result, nil))
+		return c.JSON(http.StatusCreated, response.ResponseFormat(http.StatusCreated, "Successfully operation", nil, nil))
 	}
 }
