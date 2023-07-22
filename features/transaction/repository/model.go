@@ -87,20 +87,68 @@ type User struct {
 	Transactions   []Transaction `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 }
 
+type Invoice struct {
+	ProductTransactionID string
+	ProductProductID     string
+	TransactionID        string
+	RestaurantID         string
+	RestaurantName       string
+	Owner                string
+	UserID               string
+	Buyer                string
+	ProductName          string
+	Subtotal             float64
+	Quantity             float64
+	Stock                float64
+	Invoice              string
+	Grandtotal           float64
+	PaymentStatus        string
+	PaymentMethod        string
+	PaymentType          string
+	PaymentCode          string
+	PurchaseStartDate    time.Time
+	PurchaseEndDate      time.Time
+}
+
 type Earnings struct {
 	Username string
 	Earnings float64
 }
 
-func earningsModels(earn Earnings) transaction.EarningsCore {
+func invoiceEntities(i Invoice) transaction.InvoiceCore {
+	return transaction.InvoiceCore{
+		ProductTransactionID: i.ProductTransactionID,
+		ProductProductID:     i.ProductProductID,
+		TransactionID:        i.TransactionID,
+		RestaurantID:         i.RestaurantID,
+		RestaurantName:       i.RestaurantName,
+		Owner:                i.Owner,
+		UserID:               i.UserID,
+		Buyer:                i.Buyer,
+		ProductName:          i.ProductName,
+		Subtotal:             i.Subtotal,
+		Quantity:             i.Quantity,
+		Stock:                i.Stock,
+		Invoice:              i.Invoice,
+		Grandtotal:           i.Grandtotal,
+		PaymentStatus:        i.PaymentStatus,
+		PaymentMethod:        i.PaymentMethod,
+		PaymentType:          i.PaymentType,
+		PaymentCode:          i.PaymentCode,
+		PurchaseStartDate:    i.PurchaseStartDate,
+		PurchaseEndDate:      i.PurchaseEndDate,
+	}
+}
+
+func earningsModels(e Earnings) transaction.EarningsCore {
 	return transaction.EarningsCore{
-		Username: earn.Username,
-		Earnings: earn.Earnings,
+		Username: e.Username,
+		Earnings: e.Earnings,
 	}
 }
 
 // Map TransactionCore to Transaction model
-func transactionModels(core transaction.TransactionCore) (Transaction, error) {
+func transactionModels(c transaction.TransactionCore) (Transaction, error) {
 	transactionID, err := identity.GenerateID()
 	if err != nil {
 		return Transaction{}, err
@@ -112,7 +160,7 @@ func transactionModels(core transaction.TransactionCore) (Transaction, error) {
 	}
 
 	grandtotal := 0.0
-	for _, pt := range core.Product_Transactions {
+	for _, pt := range c.Product_Transactions {
 		grandtotal += pt.Subtotal
 	}
 
@@ -126,23 +174,23 @@ func transactionModels(core transaction.TransactionCore) (Transaction, error) {
 
 	return Transaction{
 		TransactionID:     transactionID,
-		RestaurantID:      core.RestaurantID,
-		UserID:            core.UserID,
+		RestaurantID:      c.RestaurantID,
+		UserID:            c.UserID,
 		Invoice:           invoice,
 		Grandtotal:        grandtotal,
-		PaymentStatus:     core.PaymentStatus,
-		PaymentMethod:     core.PaymentMethod,
-		PaymentType:       core.PaymentType,
+		PaymentStatus:     c.PaymentStatus,
+		PaymentMethod:     c.PaymentMethod,
+		PaymentType:       c.PaymentType,
 		PaymentCode:       payment_code,
 		PurchaseStartDate: purchaseStartDate,
 		PurchaseEndDate:   purchaseEndDate,
-		CreatedAt:         core.CreatedAt,
-		UpdatedAt:         core.UpdatedAt,
-		DeletedAt:         core.DeletedAt,
+		CreatedAt:         c.CreatedAt,
+		UpdatedAt:         c.UpdatedAt,
+		DeletedAt:         c.DeletedAt,
 	}, nil
 }
 
-// Map Product_TransactionCore slice to Product_Transactions model slice
+// Product_TransactionCore slice to Product_Transactions model slice
 func productTransactionsModels(transactionID string, cores ...transaction.Product_TransactionsCore) ([]Product_Transactions, error) {
 	models := make([]Product_Transactions, len(cores))
 	for i, c := range cores {
@@ -167,22 +215,22 @@ func productTransactionsModels(transactionID string, cores ...transaction.Produc
 }
 
 // Map Transaction model to TransactionCore
-func transactionEntities(model Transaction) transaction.TransactionCore {
+func transactionEntities(m Transaction) transaction.TransactionCore {
 	return transaction.TransactionCore{
-		TransactionID:     model.TransactionID,
-		RestaurantID:      model.RestaurantID,
-		UserID:            model.UserID,
-		Invoice:           model.Invoice,
-		Grandtotal:        model.Grandtotal,
-		PaymentStatus:     model.PaymentStatus,
-		PaymentMethod:     model.PaymentMethod,
-		PaymentType:       model.PaymentType,
-		PaymentCode:       model.PaymentCode,
-		PurchaseStartDate: model.PurchaseStartDate,
-		PurchaseEndDate:   model.PurchaseEndDate,
-		CreatedAt:         model.CreatedAt,
-		UpdatedAt:         model.UpdatedAt,
-		DeletedAt:         model.DeletedAt,
+		TransactionID:     m.TransactionID,
+		RestaurantID:      m.RestaurantID,
+		UserID:            m.UserID,
+		Invoice:           m.Invoice,
+		Grandtotal:        m.Grandtotal,
+		PaymentStatus:     m.PaymentStatus,
+		PaymentMethod:     m.PaymentMethod,
+		PaymentType:       m.PaymentType,
+		PaymentCode:       m.PaymentCode,
+		PurchaseStartDate: m.PurchaseStartDate,
+		PurchaseEndDate:   m.PurchaseEndDate,
+		CreatedAt:         m.CreatedAt,
+		UpdatedAt:         m.UpdatedAt,
+		DeletedAt:         m.DeletedAt,
 		// Product_Transactions: productTransactionsEntities(Product_TransactionsCore),
 	}
 }

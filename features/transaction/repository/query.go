@@ -77,50 +77,37 @@ func (tq *Query) Carts(userId string, tr transaction.TransactionCore, ptr ...tra
 		return transaction.TransactionCore{}, err
 	}
 
-	// log.Sugar().Infof("Transaction: %+v", request)
-	// log.Sugar().Infof("Product_Transactions: %+v", request.Product_Transactions)
 	return request, nil
 }
 
 // Invoice implements transaction.Repository.
-func (tq *Query) Invoice(userId string, transactionId string) (transaction.Product_TransactionsCore, error) {
-	result := Product_Transactions{}
-	err := tq.db.Preload("Product").Preload("Transaction").First(&result, "transaction_id = ?", transactionId).Error
+func (tq *Query) Invoice(userId string, transactionId string) ([]transaction.InvoiceCore, error) {
+	result := []Invoice{}
+	err := tq.db.Raw(`SELECT *, products.product_name, buyer.username as buyer, restaurants.restaurant_name, owner.username as owner
+		FROM product_transactions
+		JOIN transactions ON product_transactions.transaction_id = transactions.transaction_id
+		JOIN products ON product_transactions.product_product_id = products.product_id
+		JOIN restaurants ON products.restaurant_id = restaurants.restaurant_id
+		JOIN users as owner ON restaurants.user_id = owner.user_id
+		JOIN users as buyer ON transactions.user_id = buyer.user_id
+		WHERE product_transactions.transaction_id = ?
+	`, transactionId).Scan(&result).Error
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Error("invoice data not found")
-			return transaction.Product_TransactionsCore{}, errors.New("invoice data not found")
+			return []transaction.InvoiceCore{}, errors.New("invoice data not found")
 		}
 		log.Sugar().Error("error executing invoice query:", err)
-		return transaction.Product_TransactionsCore{}, err
+		return []transaction.InvoiceCore{}, err
 	}
 
-	response, err := invoiceModels(result)
-	if err != nil {
-		return transaction.Product_TransactionsCore{}, err
+	var invoice []transaction.InvoiceCore
+	for _, result := range result {
+		invoice = append(invoice, invoiceEntities(result))
 	}
 
-	// log.Sugar().Infof("%+v", result)
-	return response, nil
-}
-
-func invoiceModels(model Product_Transactions) (transaction.Product_TransactionsCore, error) {
-	return transaction.Product_TransactionsCore{
-		ProductTransactionID: model.ProductTransactionID,
-		ProductProductID:     model.ProductProductID,
-		TransactionID:        model.TransactionID,
-		Subtotal:             model.Subtotal,
-		Quantity:             model.Quantity,
-		Product: transaction.ProductCore{
-			ProductName: model.Product.ProductName,
-		},
-		Transaction: transaction.TransactionCore{
-			Invoice:           model.Transaction.Invoice,
-			Grandtotal:        model.Transaction.Grandtotal,
-			PurchaseStartDate: model.Transaction.PurchaseStartDate,
-			PurchaseEndDate:   model.Transaction.PurchaseEndDate,
-		},
-	}, nil
+	return invoice, nil
 }
 
 // Earnings implements transaction.Repository.
@@ -141,7 +128,7 @@ func (tq *Query) Earnings(userId string, PurchaseStartDate time.Time, PurchaseEn
 		log.Sugar().Error("error executing earnings query:", query.Error)
 		return transaction.EarningsCore{}, query.Error
 	} else {
-		log.Sugar().Info("earnings data found in the database")
+		log.Info("earnings data found in the database")
 	}
 
 	return earningsModels(result), nil
